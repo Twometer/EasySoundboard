@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,15 +19,18 @@ namespace EasySoundboard
 {
     public partial class Form1 : Form
     {
-        private SimpleMixer mixer;
+        private SourceMixer mixer;
         private WasapiCapture soundIn;
         private WasapiOut soundOut;
         private WasapiOut monitoringOut;
+
+        private SourceCache cache = new SourceCache();
 
         public Form1()
         {
             InitializeComponent();
             ReloadDevices();
+            ReloadSounds();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -40,7 +44,7 @@ namespace EasySoundboard
                 soundIn.Initialize();
                 soundIn.Start();
 
-                mixer = new SimpleMixer(soundIn.WaveFormat.Channels, soundIn.WaveFormat.SampleRate);
+                mixer = new SourceMixer(soundIn.WaveFormat.Channels, soundIn.WaveFormat.SampleRate);
 
                 var waveSource = new SoundInSource(soundIn) { FillWithZeros = true };
                 mixer.AddSource(waveSource.ToSampleSource());
@@ -84,6 +88,37 @@ namespace EasySoundboard
             }
         }
 
+        private void PlayInStream(string path)
+        {
+            if (mixer == null)
+                return;
+
+            var source = cache.Load(path, soundIn.WaveFormat.SampleRate, trackBar1.Value);
+            if (source == null)
+                return;
+            mixer.AddSource(source);
+        }
+
+        private void ReloadSounds()
+        {
+            flowLayoutPanel1.Controls.Clear();
+            foreach (var soundFile in Directory.EnumerateFiles("./sounds/", "*.mp3"))
+            {
+                var fi = new FileInfo(soundFile);
+                var button = new Button()
+                {
+                    Tag = fi.FullName,
+                    Text = fi.Name.Remove(fi.Name.LastIndexOf(".")),
+                    Width = flowLayoutPanel1.Width - 25
+                };
+                button.Click += (a, b) =>
+                {
+                    PlayInStream(fi.FullName);
+                };
+                flowLayoutPanel1.Controls.Add(button);
+            }
+        }
+
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             soundIn?.Dispose();
@@ -91,10 +126,11 @@ namespace EasySoundboard
             monitoringOut?.Dispose();
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void button3_Click_1(object sender, EventArgs e)
         {
-            var temporarySource = CodecFactory.Instance.GetCodec(@"C:\Users\twome\Downloads\ahhyooaaawhoaaa.mp3").ToSampleSource().ToStereo().ChangeSampleRate(soundIn.WaveFormat.SampleRate);
-            mixer.AddSource(temporarySource);
+            ReloadSounds();
         }
+
+
     }
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EasySoundboard
 {
-    public class SimpleMixer : ISampleSource
+    public class SourceMixer : ISampleSource
     {
         private readonly WaveFormat _waveFormat;
         private readonly List<ISampleSource> _sampleSources = new List<ISampleSource>();
@@ -18,7 +18,7 @@ namespace EasySoundboard
 
         public bool DivideResult { get; set; }
 
-        public SimpleMixer(int channelCount, int sampleRate)
+        public SourceMixer(int channelCount, int sampleRate)
         {
             if (channelCount < 1)
                 throw new ArgumentOutOfRangeException("channelCount");
@@ -91,6 +91,7 @@ namespace EasySoundboard
                         else
                         {
                             //raise event here
+                            Console.WriteLine("source finished playing");
                             RemoveSource(sampleSource); //remove the input to make sure that the event gets only raised once.
                         }
                     }
