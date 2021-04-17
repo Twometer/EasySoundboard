@@ -1,4 +1,5 @@
 ﻿using CSCore;
+using CSCore.Codecs;
 using CSCore.CoreAudioAPI;
 using CSCore.SoundIn;
 using CSCore.SoundOut;
@@ -88,6 +89,12 @@ namespace EasySoundboard
             soundIn?.Dispose();
             soundOut?.Dispose();
             monitoringOut?.Dispose();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            var temporarySource = CodecFactory.Instance.GetCodec(@"C:\Users\twome\Downloads\ahhyooaaawhoaaa.mp3").ToSampleSource().ToStereo().ChangeSampleRate(soundIn.WaveFormat.SampleRate);
+            mixer.AddSource(temporarySource);
         }
     }
 }
